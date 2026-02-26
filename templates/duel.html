@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}" dir="{{ 'rtl' if lang == 'ar' else 'ltr' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>{{ t('duel_mode') }} - AEP</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<div class="app-header">
+  <div class="header-top">
+    <a href="/dashboard" style="color:white;font-size:20px;text-decoration:none">←</a>
+    <div class="app-logo"><span class="logo-aep">⚔️</span></div>
+    <div></div>
+  </div>
+  <div class="user-name">{{ t('duel_mode') }}</div>
+  <div style="font-size:12px;opacity:0.65">Challenge a student to a quiz battle!</div>
+</div>
+
+<div class="page-content" style="padding:16px 16px 90px">
+  <div class="duel-card">
+    <div style="font-size:12px;opacity:0.7;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:14px">⚔️ Create a Duel</div>
+    <div class="form-group">
+      <label class="form-label" style="color:rgba(255,255,255,0.7);font-size:12px">Select Subject</label>
+      <select class="form-control" id="duel-subject">
+        {% for s in subjects %}
+        <option>{{ s }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label" style="color:rgba(255,255,255,0.7);font-size:12px">Number of Questions</label>
+      <select class="form-control" id="duel-count">
+        <option value="5">5 Questions</option>
+        <option value="10" selected>10 Questions</option>
+        <option value="15">15 Questions</option>
+        <option value="20">20 Questions</option>
+      </select>
+    </div>
+  </div>
+
+  <div style="font-size:13px;font-weight:800;margin-bottom:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">👥 Select Opponent</div>
+
+  {% if not students %}
+  <div style="text-align:center;padding:40px 24px;background:white;border-radius:var(--radius);box-shadow:var(--shadow)">
+    <div style="font-size:40px;margin-bottom:12px">👥</div>
+    <div style="font-size:14px;font-weight:800">No Other Students Yet</div>
+    <div style="font-size:12px;color:var(--muted);margin-top:6px">Invite friends to register and duel!</div>
+  </div>
+  {% endif %}
+
+  {% for s in students %}
+  <div class="user-item">
+    <div class="user-avatar">{{ s.name[0].upper() }}</div>
+    <div class="user-info">
+      <div class="user-name-txt">{{ s.name }}</div>
+      <div class="user-reg-txt">{{ s.reg_number }} • {{ s.state }}</div>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="startDuel('{{ s.id }}','{{ s.name }}')">⚔️ Duel</button>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Duel Modal -->
+<div class="modal-overlay" id="duelModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">⚔️ Duel Challenge</div>
+    <div style="text-align:center;padding:20px 0">
+      <div style="display:flex;align-items:center;justify-content:center;margin-bottom:20px">
+        <div class="chat-avatar" style="font-size:20px;width:52px;height:52px">{{ user.name[0].upper() }}</div>
+        <div class="vs-badge">VS</div>
+        <div class="chat-avatar" id="duel-opponent-avatar" style="font-size:20px;width:52px;height:52px;background:linear-gradient(135deg,var(--gold),#d4891a)">?</div>
+      </div>
+      <div style="font-size:16px;font-weight:800">{{ user.name }}</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:4px">vs</div>
+      <div style="font-size:16px;font-weight:800" id="duel-opponent-name">Opponent</div>
+      <div style="font-size:13px;color:var(--accent);font-weight:700;margin-top:12px" id="duel-details"></div>
+    </div>
+    <div class="alert alert-info">
+      🚧 Duel Mode is coming soon! In the meantime, challenge your friends to compare scores on the same subject.
+    </div>
+    <button class="btn btn-primary" onclick="closeModal('duelModal')">OK, Got it!</button>
+  </div>
+</div>
+
+<nav class="bottom-nav">
+  <a href="/dashboard" class="nav-item"><span class="nav-icon">🏠</span><span>Home</span></a>
+  <a href="/subjects" class="nav-item"><span class="nav-icon">📚</span><span>Subjects</span></a>
+  <div class="nav-center-wrap"><a href="/duel" class="nav-center" style="background:linear-gradient(135deg,var(--gold),#d4891a)">⚔️</a></div>
+  <a href="/chat" class="nav-item"><span class="nav-icon">💬</span><span>Chat</span></a>
+  <a href="/profile" class="nav-item"><span class="nav-icon">👤</span><span>Profile</span></a>
+</nav>
+
+<div id="toast-container" class="toast-container"></div>
+<script src="/static/js/app.js"></script>
+<script>
+function startDuel(uid, name) {
+  const subject = document.getElementById('duel-subject').value;
+  const count = document.getElementById('duel-count').value;
+  document.getElementById('duel-opponent-avatar').textContent = name[0].toUpperCase();
+  document.getElementById('duel-opponent-name').textContent = name;
+  document.getElementById('duel-details').textContent = `${subject} • ${count} Questions`;
+  openModal('duelModal');
+}
+</script>
+</body>
+</html>

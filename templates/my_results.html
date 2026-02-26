@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}" dir="{{ 'rtl' if lang == 'ar' else 'ltr' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>{{ t('my_results') }} - AEP</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<div class="app-header">
+  <div class="header-top">
+    <a href="/dashboard" style="color:white;font-size:20px;text-decoration:none">←</a>
+    <div class="app-logo"><span class="logo-aep">AEP</span></div>
+    <div></div>
+  </div>
+  <div class="user-name">{{ t('my_results') }}</div>
+  <div style="font-size:12px;opacity:0.65">{{ results|length }} total results</div>
+</div>
+
+<div class="page-content" style="padding:12px 16px 90px">
+  {% if not results %}
+  <div style="text-align:center;padding:60px 24px">
+    <div style="font-size:50px;margin-bottom:16px">📊</div>
+    <div style="font-size:16px;font-weight:800;margin-bottom:8px">No Results Yet</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:24px">Take your first exam to see results here</div>
+    <a href="/subjects" class="btn btn-primary" style="text-decoration:none;max-width:200px">📝 Start Exam</a>
+  </div>
+  {% endif %}
+
+  {% for r in results %}
+  <a href="/result/{{ r.id }}" class="result-item">
+    <div>
+      <div class="result-subject-tag">{{ r.subject }}</div>
+      <div style="font-size:14px;font-weight:800;margin:3px 0">{{ r.mode|title }} Mode</div>
+      <div class="result-date-tag">{{ r.date[:10] }}</div>
+    </div>
+    <div style="text-align:right">
+      <div class="result-score-tag {{ 'fail' if r.percentage < 50 else '' }}">{{ r.percentage }}%</div>
+      <div style="font-size:11px;color:var(--muted);font-weight:700">{{ r.score }}/{{ r.total }}</div>
+      <div style="font-size:12px;font-weight:800">Grade {{ r.grade }}</div>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+
+<nav class="bottom-nav">
+  <a href="/dashboard" class="nav-item"><span class="nav-icon">🏠</span><span>Home</span></a>
+  <a href="/subjects" class="nav-item"><span class="nav-icon">📚</span><span>Subjects</span></a>
+  <div class="nav-center-wrap"><a href="/subjects?mode=exam" class="nav-center">📝</a></div>
+  <a href="/my_results" class="nav-item active"><span class="nav-icon">🏆</span><span>Results</span></a>
+  <a href="/profile" class="nav-item"><span class="nav-icon">👤</span><span>Profile</span></a>
+</nav>
+
+<div id="toast-container" class="toast-container"></div>
+<script src="/static/js/app.js"></script>
+</body>
+</html>

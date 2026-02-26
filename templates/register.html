@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}" dir="{{ 'rtl' if lang == 'ar' else 'ltr' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>{{ t('register') }} - AEP</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="auth-page">
+
+<div class="auth-header">
+  <div class="auth-logo"><span>AEP</span></div>
+  <div style="font-size:13px;font-weight:800;opacity:0.8">Ahmerdee Exam Practice</div>
+  <div class="auth-tagline">Register like JAMB Standard</div>
+  <div class="lang-bar" style="margin-top:16px;justify-content:center">
+    <a href="/set_lang/en" class="lang-btn {{ 'active' if lang=='en' else '' }}">EN</a>
+    <a href="/set_lang/ha" class="lang-btn {{ 'active' if lang=='ha' else '' }}">HA</a>
+    <a href="/set_lang/ar" class="lang-btn {{ 'active' if lang=='ar' else '' }}">عربي</a>
+    <a href="/set_lang/zh" class="lang-btn {{ 'active' if lang=='zh' else '' }}">中文</a>
+  </div>
+</div>
+
+<div class="auth-body">
+
+  {% if success %}
+  <div class="reg-success">
+    <div style="font-size:40px;margin-bottom:12px">🎉</div>
+    <div style="font-size:16px;font-weight:800;margin-bottom:6px">{{ t('registration_success') }}</div>
+    <div class="reg-number-display">{{ reg_number }}</div>
+    <div style="font-size:13px;opacity:0.7;margin-bottom:20px">Welcome, {{ student_name }}!<br>Save this number - you need it to login.</div>
+    <a href="/login" class="btn btn-gold" style="text-decoration:none">🔑 {{ t('login_now') }}</a>
+  </div>
+  {% else %}
+
+  <div class="auth-title">{{ t('register') }} 📝</div>
+  <div class="auth-sub">A unique Reg. Number will be generated for you</div>
+
+  {% if error %}
+  <div class="alert alert-error">❌ {{ error }}</div>
+  {% endif %}
+
+  <form method="POST" action="/register">
+    <div class="form-group">
+      <label class="form-label">{{ t('full_name') }} *</label>
+      <input type="text" name="name" class="form-control" placeholder="Aminu Abubakar" required>
+    </div>
+    <div class="form-group">
+      <label class="form-label">{{ t('email') }} *</label>
+      <input type="email" name="email" class="form-control" placeholder="email@example.com" required>
+    </div>
+    <div class="form-group">
+      <label class="form-label">{{ t('phone') }} *</label>
+      <input type="tel" name="phone" class="form-control" placeholder="08012345678" required inputmode="tel">
+    </div>
+    <div class="form-group">
+      <label class="form-label">{{ t('school') }} *</label>
+      <input type="text" name="school" class="form-control" placeholder="Government Secondary School, Kano" required>
+    </div>
+    <div class="form-group">
+      <label class="form-label">{{ t('state') }} *</label>
+      <select name="state" class="form-control" required>
+        <option value="">-- Select State --</option>
+        {% for s in ['Abia','Adamawa','Akwa Ibom','Anambra','Bauchi','Bayelsa','Benue','Borno','Cross River','Delta','Ebonyi','Edo','Ekiti','Enugu','FCT','Gombe','Imo','Jigawa','Kaduna','Kano','Katsina','Kebbi','Kogi','Kwara','Lagos','Nasarawa','Niger','Ogun','Ondo','Osun','Oyo','Plateau','Rivers','Sokoto','Taraba','Yobe','Zamfara'] %}
+        <option>{{ s }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">{{ t('address') }} *</label>
+      <input type="text" name="address" class="form-control" placeholder="No. 12, Kaduna Road, Kano" required>
+    </div>
+    <div class="form-group">
+      <label class="form-label">{{ t('dob') }} *</label>
+      <input type="date" name="dob" class="form-control" required>
+    </div>
+    <div class="form-group">
+      <label class="form-label">{{ t('password') }} *</label>
+      <input type="password" name="password" class="form-control" placeholder="Min. 6 characters" required>
+    </div>
+    <div class="form-group">
+      <label class="form-label">{{ t('confirm_password') }} *</label>
+      <input type="password" name="confirm" class="form-control" placeholder="Repeat password" required>
+    </div>
+    <button type="submit" class="btn btn-primary">🎓 {{ t('create_account') }}</button>
+  </form>
+
+  <div class="auth-footer">
+    Already have an account? <a href="/login">{{ t('login') }}</a>
+  </div>
+  {% endif %}
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+<script src="/static/js/app.js"></script>
+</body>
+</html>

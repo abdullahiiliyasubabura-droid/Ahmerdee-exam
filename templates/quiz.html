@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}" dir="{{ 'rtl' if lang == 'ar' else 'ltr' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>{{ subject }} Quiz - AEP</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<div class="exam-header">
+  <div>
+    <div class="exam-title">{{ subject }}</div>
+    <div style="font-size:11px;opacity:0.7;text-transform:uppercase;letter-spacing:1px;margin-top:2px">❓ Quiz Mode — Instant Feedback</div>
+  </div>
+  <div style="background:var(--gold);padding:6px 12px;border-radius:20px;font-size:13px;font-weight:800">
+    ❓ Quiz
+  </div>
+</div>
+
+<div id="exam-body" style="padding:0 0 20px">
+  <div class="question-card">
+    <div class="q-number" id="q-number">Question 1 of {{ questions|length }}</div>
+    <div class="q-text" id="q-text">Loading...</div>
+    <div id="options-container"></div>
+    <div id="quiz-feedback" style="margin-top:12px"></div>
+  </div>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+<script src="/static/js/app.js"></script>
+<script>
+const QUESTIONS = {{ questions|tojson }};
+const SUBJECT = "{{ subject }}";
+window.quizEngine = new QuizEngine(QUESTIONS, SUBJECT);
+window.quizEngine.start();
+</script>
+</body>
+</html>

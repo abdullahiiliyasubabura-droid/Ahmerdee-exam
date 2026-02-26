@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}" dir="{{ 'rtl' if lang == 'ar' else 'ltr' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Verify Certificate - AEP</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="auth-page">
+
+<div class="auth-header" style="padding:40px 24px 36px">
+  <div class="auth-logo" style="font-size:28px"><span>AEP</span></div>
+  <div style="font-size:12px;font-weight:800;opacity:0.8;margin-top:4px">Ahmerdee Exam Practice</div>
+  <div style="font-size:13px;opacity:0.65;margin-top:6px">🔍 Certificate Verification Portal</div>
+</div>
+
+<div class="auth-body">
+  <div class="auth-title">Verify Certificate</div>
+  <div class="auth-sub">Enter a Verification ID to check if a certificate is genuine</div>
+
+  <form method="GET" action="/verify" style="margin-bottom:20px">
+    <div class="form-group">
+      <label class="form-label">Verification ID</label>
+      <input type="text" name="verify_id" class="form-control" placeholder="e.g. A1B2C3D4" value="{{ verify_id }}" style="text-transform:uppercase;letter-spacing:2px;font-weight:700">
+    </div>
+    <button type="submit" class="btn btn-primary">🔍 Verify Now</button>
+  </form>
+
+  {% if verify_id and not result %}
+  <div class="alert alert-error">
+    ❌ <strong>INVALID</strong> — No certificate found with this ID. This document may have been tampered with.
+  </div>
+  {% endif %}
+
+  {% if result %}
+  <div class="alert alert-success">
+    ✅ <strong>VALID CERTIFICATE</strong> — This is an authentic AEP certificate.
+  </div>
+  <div class="cert-card">
+    <div class="cert-watermark">AHMERDEE</div>
+    <div class="cert-badge">🏆 OFFICIAL CERTIFICATE — VERIFIED</div>
+    <div style="font-size:11px;opacity:0.5;margin-bottom:12px;letter-spacing:1px">AHMERDEE EXAM PRACTICE</div>
+    <div class="cert-name">{{ result.user_name }}</div>
+    <div style="font-size:12px;opacity:0.6;margin-bottom:4px">{{ result.reg_number }}</div>
+    <div class="cert-subject">{{ result.subject }} — {{ result.mode|title }} Examination</div>
+    <div class="cert-score-big">{{ result.percentage }}%</div>
+    <div style="font-size:13px;opacity:0.7;margin-top:4px">{{ result.score }}/{{ result.total }} Correct • Grade {{ result.grade }}</div>
+    <div style="margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.15)">
+      <div style="font-size:10px;opacity:0.5;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Date of Examination</div>
+      <div style="font-size:13px;font-weight:700">{{ result.date[:10] }}</div>
+      <div style="font-size:10px;opacity:0.5;letter-spacing:1px;text-transform:uppercase;margin:8px 0 4px">Verification ID</div>
+      <div style="font-size:13px;font-weight:800;color:var(--gold);letter-spacing:2px">{{ result.verify_id }}</div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div style="text-align:center;margin-top:20px;font-size:12px;color:var(--muted)">
+    <a href="/login" style="color:var(--accent);font-weight:700;text-decoration:none">Login to AEP →</a>
+  </div>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+<script src="/static/js/app.js"></script>
+</body>
+</html>

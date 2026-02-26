@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}" dir="{{ 'rtl' if lang == 'ar' else 'ltr' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>{{ t('login') }} - AEP</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="auth-page">
+
+<div class="auth-header">
+  <div class="auth-logo"><span>AEP</span></div>
+  <div style="font-size:13px;font-weight:800;opacity:0.8">Ahmerdee Exam Practice</div>
+  <div class="auth-tagline">{{ t('tagline') }}</div>
+  <div class="lang-bar" style="margin-top:16px;justify-content:center">
+    <a href="/set_lang/en" class="lang-btn {{ 'active' if lang=='en' else '' }}">EN</a>
+    <a href="/set_lang/ha" class="lang-btn {{ 'active' if lang=='ha' else '' }}">HA</a>
+    <a href="/set_lang/ar" class="lang-btn {{ 'active' if lang=='ar' else '' }}">عربي</a>
+    <a href="/set_lang/zh" class="lang-btn {{ 'active' if lang=='zh' else '' }}">中文</a>
+  </div>
+</div>
+
+<div class="auth-body">
+  <div class="auth-title">{{ t('login') }} 👋</div>
+  <div class="auth-sub">Enter your email or registration number</div>
+
+  {% if error %}
+  <div class="alert alert-error">❌ {{ error }}</div>
+  {% endif %}
+
+  <form method="POST" action="/login">
+    <div class="form-group">
+      <label class="form-label">{{ t('email') }} / {{ t('reg_number') }}</label>
+      <input type="text" name="identifier" class="form-control" placeholder="Email or AEP20260001" required autocomplete="username">
+    </div>
+    <div class="form-group">
+      <label class="form-label">{{ t('password') }}</label>
+      <input type="password" name="password" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+    </div>
+    <button type="submit" class="btn btn-primary">🔑 {{ t('login_now') }}</button>
+  </form>
+
+  <div class="auth-footer">
+    Don't have an account? <a href="/register">{{ t('register') }}</a>
+  </div>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+<script src="/static/js/app.js"></script>
+</body>
+</html>

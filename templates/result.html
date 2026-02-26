@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}" dir="{{ 'rtl' if lang == 'ar' else 'ltr' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Result - AEP</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<div class="result-hero">
+  <div class="result-score-ring {{ 'pass' if result.percentage >= 50 else 'fail' }}">
+    <div>
+      <div class="result-percent">{{ result.percentage }}%</div>
+      <div class="result-grade">Grade {{ result.grade }}</div>
+    </div>
+  </div>
+  <div class="result-name">{{ result.user_name }}</div>
+  <div class="result-subject">{{ result.subject }} | {{ result.mode|title }} Exam</div>
+  <div style="margin-top:12px;font-size:14px;opacity:0.8">
+    {% if result.percentage >= 70 %}🎉 Excellent Performance!
+    {% elif result.percentage >= 50 %}👍 Good Performance!
+    {% else %}📚 Keep Studying!
+    {% endif %}
+  </div>
+</div>
+
+<div class="result-details">
+
+  <div class="result-row">
+    <span class="result-key">Score</span>
+    <span class="result-val">{{ result.score }} / {{ result.total }}</span>
+  </div>
+  <div class="result-row">
+    <span class="result-key">Percentage</span>
+    <span class="result-val" style="color:{{ 'var(--green)' if result.percentage >= 50 else 'var(--red)' }}">{{ result.percentage }}%</span>
+  </div>
+  <div class="result-row">
+    <span class="result-key">Grade</span>
+    <span class="result-val" style="font-size:22px">{{ result.grade }}</span>
+  </div>
+  <div class="result-row">
+    <span class="result-key">Date</span>
+    <span class="result-val" style="font-size:12px">{{ result.date[:10] }}</span>
+  </div>
+  <div class="result-row">
+    <span class="result-key">Reg. Number</span>
+    <span class="result-val" style="color:var(--accent);font-size:12px">{{ result.reg_number }}</span>
+  </div>
+
+  {% if result.mode == 'exam' %}
+  <div class="cert-card">
+    <div class="cert-watermark">AHMERDEE</div>
+    <div class="cert-badge">🏆 OFFICIAL CERTIFICATE</div>
+    <div style="font-size:11px;opacity:0.5;margin-bottom:12px;letter-spacing:1px">AHMERDEE EXAM PRACTICE</div>
+    <div class="cert-name">{{ result.user_name }}</div>
+    <div class="cert-subject">{{ result.subject }} — {{ result.mode|title }} Examination</div>
+    <div class="cert-score-big">{{ result.percentage }}%</div>
+    <div style="font-size:13px;opacity:0.7;margin-top:4px">{{ result.score }}/{{ result.total }} Correct • Grade {{ result.grade }}</div>
+    <div style="margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.15)">
+      <div style="font-size:10px;opacity:0.5;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Verification ID</div>
+      <div style="font-size:13px;font-weight:800;color:var(--gold);letter-spacing:2px">{{ result.verify_id }}</div>
+      <div class="cert-id">Verify at: aep.ahmerdee.com/verify/{{ result.verify_id }}</div>
+    </div>
+  </div>
+
+  <div style="margin:0 0 12px">
+    <button class="btn btn-outline btn-sm" onclick="copyText('{{ result.verify_id }}','Verification ID copied!')" style="width:auto;margin-bottom:8px">📋 Copy Verify ID</button>
+  </div>
+  {% endif %}
+
+  <a href="/subjects" class="btn btn-primary" style="text-decoration:none;margin-bottom:10px">📚 Take Another Exam</a>
+  <a href="/my_results" class="btn btn-outline" style="text-decoration:none">📊 My Results</a>
+
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+<script src="/static/js/app.js"></script>
+</body>
+</html>

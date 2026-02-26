@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}" dir="{{ 'rtl' if lang == 'ar' else 'ltr' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>{{ t('dashboard') }} - AEP</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<div class="app-header">
+  <div class="header-top">
+    <div class="app-logo">
+      <span class="logo-aep">AEP</span>
+      <span class="logo-sub">Ahmerdee Exam Practice</span>
+    </div>
+    <div class="header-icons">
+      <a href="/notifications" class="icon-btn">🔔</a>
+      <a href="/profile" class="icon-btn">👤</a>
+    </div>
+  </div>
+  <div class="user-greeting">{{ t('welcome_back') }} 👋</div>
+  <div class="user-name">{{ user.name }}</div>
+  <div class="user-reg">{{ user.reg_number }}</div>
+  <div class="lang-bar" style="margin-top:12px">
+    <a href="/set_lang/en" class="lang-btn {{ 'active' if lang=='en' else '' }}">EN</a>
+    <a href="/set_lang/ha" class="lang-btn {{ 'active' if lang=='ha' else '' }}">HA</a>
+    <a href="/set_lang/ar" class="lang-btn {{ 'active' if lang=='ar' else '' }}">عربي</a>
+    <a href="/set_lang/zh" class="lang-btn {{ 'active' if lang=='zh' else '' }}">中文</a>
+  </div>
+</div>
+
+<div class="page-content">
+
+  {% if recent_bc %}
+  <div style="margin:14px 16px 0">
+    <div class="alert alert-info">📢 {{ recent_bc.message }}</div>
+  </div>
+  {% endif %}
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-val" style="color:var(--accent)">{{ user.exam_count or 0 }}</div>
+      <div class="stat-lbl">Exams Taken</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" style="color:var(--green)">{{ results_count }}</div>
+      <div class="stat-lbl">Results</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-val" style="color:var(--gold)">{{ user.practice_count or 0 }}</div>
+      <div class="stat-lbl">Practice</div>
+    </div>
+  </div>
+
+  <div class="section" style="padding-top:16px">
+    <div class="section-header">
+      <div class="section-title">🚀 Quick Start</div>
+    </div>
+    <div class="menu-grid">
+      <a href="/subjects?mode=exam" class="menu-item">
+        <div class="menu-icon icon-exam">📝</div>
+        <div class="menu-label">{{ t('exam_mode') }}</div>
+      </a>
+      <a href="/subjects?mode=practice" class="menu-item">
+        <div class="menu-icon icon-practice">📚</div>
+        <div class="menu-label">{{ t('practice_mode') }}</div>
+      </a>
+      <a href="/subjects?mode=quiz" class="menu-item">
+        <div class="menu-icon icon-quiz">❓</div>
+        <div class="menu-label">{{ t('quiz_mode') }}</div>
+      </a>
+      <a href="/duel" class="menu-item">
+        <div class="menu-icon icon-duel">⚔️</div>
+        <div class="menu-label">{{ t('duel_mode') }}</div>
+      </a>
+      <a href="/library" class="menu-item">
+        <div class="menu-icon icon-library">📖</div>
+        <div class="menu-label">{{ t('library') }}</div>
+      </a>
+      <a href="/chat" class="menu-item">
+        <div class="menu-icon icon-chat">💬</div>
+        <div class="menu-label">{{ t('chat') }}</div>
+      </a>
+      <a href="/my_results" class="menu-item">
+        <div class="menu-icon icon-results">🏆</div>
+        <div class="menu-label">{{ t('my_results') }}</div>
+      </a>
+      <a href="/leaderboard" class="menu-item">
+        <div class="menu-icon" style="background:linear-gradient(135deg,#F59E0B,#d97706)">🥇</div>
+        <div class="menu-label">Leaderboard</div>
+      </a>
+      <a href="/support" class="menu-item">
+        <div class="menu-icon icon-support">🎫</div>
+        <div class="menu-label">{{ t('support') }}</div>
+      </a>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">📌 My Info</div>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;margin-bottom:10px">
+        <span style="font-size:13px;color:var(--muted);font-weight:700">Reg. Number</span>
+        <span style="font-size:13px;font-weight:900;color:var(--accent)">{{ user.reg_number }}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:10px">
+        <span style="font-size:13px;color:var(--muted);font-weight:700">School</span>
+        <span style="font-size:13px;font-weight:700;max-width:200px;text-align:right">{{ user.school }}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <span style="font-size:13px;color:var(--muted);font-weight:700">State</span>
+        <span style="font-size:13px;font-weight:700">{{ user.state }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="height:16px"></div>
+</div>
+
+<nav class="bottom-nav">
+  <a href="/dashboard" class="nav-item active"><span class="nav-icon">🏠</span><span>Home</span></a>
+  <a href="/subjects" class="nav-item"><span class="nav-icon">📚</span><span>Subjects</span></a>
+  <div class="nav-center-wrap"><a href="/subjects?mode=exam" class="nav-center">📝</a></div>
+  <a href="/my_results" class="nav-item"><span class="nav-icon">🏆</span><span>Results</span></a>
+  <a href="/profile" class="nav-item"><span class="nav-icon">👤</span><span>Profile</span></a>
+</nav>
+
+<div id="toast-container" class="toast-container"></div>
+<script src="/static/js/app.js"></script>
+</body>
+</html>
