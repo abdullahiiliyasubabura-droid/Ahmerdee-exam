@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}" dir="{{ 'rtl' if lang == 'ar' else 'ltr' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Support - AEP Admin</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<div class="app-header">
+  <div class="header-top">
+    <a href="/admin" style="color:white;font-size:20px;text-decoration:none">←</a>
+    <div class="app-logo"><span class="logo-aep">🎫</span></div>
+    <div></div>
+  </div>
+  <div class="user-name">Support Tickets</div>
+  <div style="font-size:12px;opacity:0.65">{{ tickets|length }} tickets</div>
+</div>
+
+<div style="padding:12px 16px 40px">
+  {% for tk in tickets %}
+  <div class="ticket-item">
+    <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+      <div>
+        <div style="font-size:14px;font-weight:800">{{ tk.user_name }}</div>
+        <div style="font-size:11px;color:var(--muted);font-weight:600">{{ tk.reg_number }}</div>
+      </div>
+      <div style="text-align:right">
+        <span class="ticket-status {{ 'status-replied' if tk.status == 'replied' else 'status-open' }}">{{ tk.status }}</span>
+        <div class="ticket-date" style="margin-top:4px">{{ tk.date[:10] }}</div>
+      </div>
+    </div>
+    <div class="ticket-msg">{{ tk.message }}</div>
+    {% for reply in tk.get('replies', []) %}
+    <div class="ticket-reply">
+      <div style="font-size:10px;font-weight:800;color:var(--accent);margin-bottom:4px">Reply by {{ reply.by }} • {{ reply.date[:10] }}</div>
+      <p>{{ reply.message }}</p>
+    </div>
+    {% endfor %}
+    {% if tk.status != 'replied' %}
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <input type="text" class="form-control" id="reply-{{ tk.id }}" placeholder="Type reply..." style="flex:1">
+      <button class="btn btn-primary btn-sm" onclick="replyTicket('{{ tk.id }}')">Reply</button>
+    </div>
+    {% endif %}
+  </div>
+  {% endfor %}
+  {% if not tickets %}
+  <div style="text-align:center;padding:40px;color:var(--muted)">No tickets yet.</div>
+  {% endif %}
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+<script src="/static/js/app.js"></script>
+</body>
+</html>

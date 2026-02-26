@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}" dir="{{ 'rtl' if lang == 'ar' else 'ltr' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>{{ target.name }} - AEP Admin</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<div class="app-header">
+  <div class="header-top">
+    <a href="/admin/users" style="color:white;font-size:20px;text-decoration:none">←</a>
+    <div class="app-logo"><span class="logo-aep">👤</span></div>
+    <div></div>
+  </div>
+  <div class="user-name">{{ target.name }}</div>
+  <div style="font-size:12px;opacity:0.65">{{ target.reg_number }}</div>
+</div>
+
+<div style="padding:16px;padding-bottom:40px">
+
+  <div class="profile-hero" style="border-radius:var(--radius);margin-bottom:16px">
+    <div class="profile-avatar" style="margin-bottom:10px">{{ target.name[0].upper() }}</div>
+    <div class="profile-name">{{ target.name }}</div>
+    <div class="profile-reg">{{ target.reg_number }}</div>
+  </div>
+
+  <div class="card">
+    <div style="font-size:13px;font-weight:800;margin-bottom:10px;color:var(--muted);text-transform:uppercase">Profile Info</div>
+    {% for label, val in [('Email', target.email), ('Phone', target.phone), ('School', target.school), ('State', target.state), ('Address', target.address), ('DOB', target.dob), ('Joined', target.created[:10])] %}
+    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:13px;color:var(--muted);font-weight:600">{{ label }}</span>
+      <span style="font-size:13px;font-weight:700;max-width:240px;text-align:right">{{ val }}</span>
+    </div>
+    {% endfor %}
+    <div style="display:flex;justify-content:space-between;padding:8px 0">
+      <span style="font-size:13px;color:var(--muted);font-weight:600">Exams Taken</span>
+      <span style="font-size:13px;font-weight:700">{{ target.exam_count or 0 }}</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="font-size:13px;font-weight:800;margin-bottom:10px;color:var(--muted);text-transform:uppercase">Status</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      {% if target.banned %}
+      <span class="user-badge badge-banned" style="padding:6px 14px;font-size:12px">🚫 Banned</span>
+      {% elif target.blocked %}
+      <span class="user-badge badge-blocked" style="padding:6px 14px;font-size:12px">⛔ Blocked</span>
+      {% elif target.warned %}
+      <span class="user-badge badge-warned" style="padding:6px 14px;font-size:12px">⚠️ Warned</span>
+      {% else %}
+      <span class="user-badge badge-active" style="padding:6px 14px;font-size:12px">✅ Active</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+    <button class="btn btn-outline btn-sm" onclick="userAction('{{ target.id }}','warn')" style="border-color:#F59E0B;color:#92400E">⚠️ Warn</button>
+    <button class="btn btn-outline btn-sm" onclick="userAction('{{ target.id }}','block')" style="border-color:#F97316;color:#c2410c">⛔ {{ 'Unblock' if target.blocked else 'Block' }}</button>
+    <button class="btn btn-outline btn-sm" onclick="userAction('{{ target.id }}','ban')" style="border-color:var(--red);color:var(--red)">🚫 {{ 'Unban' if target.banned else 'Ban' }}</button>
+    <a href="/admin/broadcast?target={{ target.id }}" class="btn btn-outline btn-sm" style="text-decoration:none;display:flex;align-items:center;justify-content:center">📨 Message</a>
+  </div>
+
+  {% if user_results %}
+  <div style="font-size:13px;font-weight:800;margin-bottom:10px;color:var(--muted);text-transform:uppercase">Results ({{ user_results|length }})</div>
+  {% for r in user_results[:5] %}
+  <div class="result-item" style="margin-bottom:8px">
+    <div>
+      <div class="result-subject-tag">{{ r.subject }}</div>
+      <div style="font-size:13px;font-weight:700">{{ r.mode|title }} • {{ r.date[:10] }}</div>
+    </div>
+    <div class="result-score-tag {{ 'fail' if r.percentage < 50 else '' }}">{{ r.percentage }}%</div>
+  </div>
+  {% endfor %}
+  {% endif %}
+
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+<script src="/static/js/app.js"></script>
+</body>
+</html>
