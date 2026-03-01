@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}" dir="{{ 'rtl' if lang == 'ar' else 'ltr' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Books - AEP Admin</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<div class="app-header">
+  <div class="header-top">
+    <a href="/admin" style="color:white;font-size:20px;text-decoration:none">←</a>
+    <div class="app-logo"><span class="logo-aep">📚</span></div>
+    <div></div>
+  </div>
+  <div class="user-name">Book Library</div>
+  <div style="font-size:12px;opacity:0.65">{{ books|length }} books uploaded</div>
+</div>
+
+<div style="padding:16px">
+  {% if success_msg %}
+  <div class="alert alert-success">✅ {{ success_msg }}</div>
+  {% endif %}
+
+  <div class="card">
+    <div style="font-size:14px;font-weight:800;margin-bottom:12px">📤 Upload New Book</div>
+    <form method="POST" action="/admin/books" enctype="multipart/form-data">
+      <div class="form-group">
+        <label class="form-label">Book Title</label>
+        <input type="text" name="title" class="form-control" placeholder="e.g. JAMB Physics Textbook" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Subject</label>
+        <select name="subject" class="form-control">
+          {% for s in subjects %}<option>{{ s }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <input type="text" name="description" class="form-control" placeholder="Brief description...">
+      </div>
+      <div class="form-group">
+        <label class="form-label">PDF File</label>
+        <input type="file" name="file" class="form-control" accept=".pdf" required>
+      </div>
+      <button type="submit" class="btn btn-primary">📤 Upload Book</button>
+    </form>
+  </div>
+
+  <div style="font-size:13px;font-weight:800;margin:16px 0 10px;color:var(--muted);text-transform:uppercase">📚 Uploaded Books</div>
+  {% for book in books %}
+  <div class="book-card">
+    <div class="book-icon">📕</div>
+    <div style="flex:1">
+      <div class="book-title">{{ book.title }}</div>
+      <div class="book-subject">{{ book.subject }}</div>
+      {% if book.description %}
+      <div class="book-desc">{{ book.description }}</div>
+      {% endif %}
+      <div style="font-size:11px;color:var(--muted);font-weight:600">{{ (book.size / 1024 / 1024)|round(1) }} MB • {{ book.uploaded[:10] }}</div>
+    </div>
+  </div>
+  {% endfor %}
+  {% if not books %}
+  <div style="text-align:center;padding:40px;color:var(--muted)">No books uploaded yet.</div>
+  {% endif %}
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+<script src="/static/js/app.js"></script>
+</body>
+</html>

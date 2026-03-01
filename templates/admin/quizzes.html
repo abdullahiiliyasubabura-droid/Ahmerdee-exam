@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Quiz Management - Admin</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<div class="app-header">
+  <div class="header-top">
+    <a href="/admin" style="color:white;font-size:20px;text-decoration:none">←</a>
+    <div class="app-logo"><span class="logo-aep">⚡</span></div>
+    <div></div>
+  </div>
+  <div class="user-name">Quiz Management</div>
+  <div style="font-size:12px;opacity:0.65">Approve, schedule and manage quizzes</div>
+</div>
+
+<div style="padding:16px;padding-bottom:40px">
+  {% for qs in quiz_sessions %}
+  <div class="card" style="border-color:{% if qs.status=='active' %}var(--accent){% elif qs.status=='requested' %}var(--gold){% else %}var(--border){% endif %}">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+      <div>
+        <div style="font-size:15px;font-weight:800">{{ qs.subject }}</div>
+        <div style="font-size:12px;color:var(--muted)">Requested by: {{ qs.requested_by_name }}</div>
+        <div style="font-size:11px;color:var(--muted)">{{ qs.created[:16] }}</div>
+      </div>
+      <span style="font-size:11px;font-weight:800;padding:4px 10px;border-radius:50px;
+        background:{% if qs.status=='active' %}rgba(233,69,96,0.15){% elif qs.status=='requested' %}rgba(245,200,66,0.15){% elif qs.status=='finished' %}rgba(34,197,94,0.1){% else %}rgba(100,100,100,0.1){% endif %};
+        color:{% if qs.status=='active' %}var(--accent){% elif qs.status=='requested' %}var(--gold2){% elif qs.status=='finished' %}#16a34a{% else %}var(--muted){% endif %}">
+        {% if qs.status=='active' %}🔴 LIVE{% elif qs.status=='requested' %}⏳ Pending{% elif qs.status=='finished' %}✅ Done{% else %}🟡 Scheduled{% endif %}
+      </span>
+    </div>
+
+    {% if qs.status == 'requested' %}
+    <!-- Approve form -->
+    <div style="background:var(--bg);border-radius:12px;padding:14px;margin-top:8px">
+      <div style="font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Approve Quiz</div>
+      <div class="form-group">
+        <label class="form-label" style="font-size:12px">Scheduled Time</label>
+        <input type="text" id="time-{{ qs.id }}" class="form-control" placeholder="e.g. 3:00 PM today" style="font-size:13px;padding:10px 14px">
+      </div>
+      <div class="form-group">
+        <label class="form-label" style="font-size:12px">Seconds per Question</label>
+        <select id="tpq-{{ qs.id }}" class="form-control" style="font-size:13px;padding:10px 14px">
+          <option value="20">20 seconds</option>
+          <option value="30" selected>30 seconds</option>
+          <option value="45">45 seconds</option>
+          <option value="60">60 seconds</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label" style="font-size:12px">Participants (select students)</label>
+        <div id="participants-{{ qs.id }}" style="display:flex;flex-wrap:wrap;gap:6px;padding:8px 0">
+          <div style="font-size:12px;color:var(--muted)">Add participant IDs manually or auto-select all</div>
+        </div>
+        <input type="text" id="pids-{{ qs.id }}" class="form-control" style="font-size:12px;padding:8px 12px;margin-top:6px" placeholder="Paste student IDs comma-separated (or leave empty for requester only)">
+      </div>
+      <button class="btn btn-primary" onclick="approveQuiz('{{ qs.id }}')" style="width:100%">✅ Approve & Announce</button>
+    </div>
+    {% endif %}
+
+    {% if qs.status == 'pending' %}
+    <div style="background:rgba(245,200,66,0.1);border-radius:12px;padding:10px 14px;margin-bottom:12px">
+      <div style="font-size:12px;color:var(--gold2);font-weight:700">📅 Scheduled: {{ qs.scheduled_time }}</div>
+      <div style="font-size:12px;color:var(--muted)">{{ qs.participants|length }} participants • {{ qs.time_per_question }}s/question</div>
+    </div>
+    <button class="btn btn-primary" onclick="startQuiz('{{ qs.id }}')" style="width:100%;margin-bottom:8px">🚀 Start Quiz NOW</button>
+    {% endif %}
+
+    {% if qs.status == 'active' %}
+    <div style="margin-bottom:12px">
+      <div style="font-size:12px;color:var(--muted)">Question {{ (qs.current_question or 0)+1 }} of {{ qs.question_ids|length }}</div>
+      <div style="font-size:12px;color:var(--accent);font-weight:700;margin-top:4px">Scores:
+        {% for uid,sc in qs.scores.items() %}{{ uid[:6] }}:{{ sc }} {% endfor %}
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary" onclick="nextQuestion('{{ qs.id }}')" style="flex:2">⏭ Next Question</button>
+      <button class="btn btn-outline" onclick="replaceParticipant('{{ qs.id }}')" style="flex:1;font-size:12px">🔄 Replace</button>
+    </div>
+    {% endif %}
+
+    {% if qs.status == 'finished' %}
+    <div style="font-size:12px;color:var(--muted)">
+      Final Scores:
+      {% for uid,sc in qs.scores.items() %}{{ uid[:8] }}={{ sc }} {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+  {% else %}
+  <div style="text-align:center;padding:60px 24px;color:var(--muted)">
+    <div style="font-size:40px;margin-bottom:12px">⚡</div>
+    <div style="font-weight:800;margin-bottom:8px">No Quiz Requests Yet</div>
+    <div style="font-size:13px">Students can request quizzes from the Quiz Lobby page</div>
+  </div>
+  {% endfor %}
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+<script src="/static/js/app.js"></script>
+<script>
+function approveQuiz(id) {
+  const scheduledTime = document.getElementById(`time-${id}`).value.trim();
+  const timePerQ = parseInt(document.getElementById(`tpq-${id}`).value);
+  const pidsRaw = document.getElementById(`pids-${id}`).value.trim();
+  const participants = pidsRaw ? pidsRaw.split(',').map(s=>s.trim()).filter(Boolean) : [];
+  if (!scheduledTime) { showToast('Saka lokaci!', 'error'); return; }
+  fetch('/admin/quiz_approve', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({quiz_id:id, scheduled_time:scheduledTime, time_per_question:timePerQ, participants})
+  }).then(r=>r.json()).then(d=>{
+    showToast(d.message||'Done', d.success?'success':'error');
+    if(d.success) setTimeout(()=>location.reload(), 1500);
+  });
+}
+
+function startQuiz(id) {
+  fetch('/admin/quiz_start', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({quiz_id:id})
+  }).then(r=>r.json()).then(d=>{
+    showToast(d.message||'Done', d.success?'success':'error');
+    if(d.success) setTimeout(()=>location.reload(), 1000);
+  });
+}
+
+function nextQuestion(id) {
+  fetch('/admin/quiz_next_question', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({quiz_id:id})
+  }).then(r=>r.json()).then(d=>{
+    showToast(d.success?'Next question!':'Error', d.success?'success':'error');
+    setTimeout(()=>location.reload(), 500);
+  });
+}
+
+function replaceParticipant(id) {
+  const old_uid = prompt('Enter OLD student ID to replace:');
+  const new_uid = prompt('Enter NEW student ID:');
+  if (!old_uid || !new_uid) return;
+  fetch('/admin/quiz_replace', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({quiz_id:id, old_uid, new_uid})
+  }).then(r=>r.json()).then(d=>showToast(d.message||'Done', d.success?'success':'error'));
+}
+// Refresh every 10s when active quiz exists
+setInterval(()=>location.reload(), 15000);
+</script>
+</body>
+</html>

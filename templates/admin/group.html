@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Admin Group Chat</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <style>
+    .amsg { display:flex; gap:8px; padding:8px 0; border-bottom:1px solid var(--border); }
+    .amsg-name { font-size:12px; font-weight:800; color:var(--accent); }
+    .amsg-name.admin-name { color:var(--gold2); }
+    .amsg-text { font-size:13px; margin-top:2px; white-space:pre-line; }
+    .amsg-time { font-size:10px; color:var(--muted); }
+    .amsg-actions { display:flex; gap:6px; margin-top:4px; }
+    .action-sm { font-size:10px; padding:3px 8px; border-radius:6px; border:1px solid var(--border); background:white; cursor:pointer; font-family:var(--font); font-weight:600; }
+  </style>
+</head>
+<body>
+<div class="app-header">
+  <div class="header-top">
+    <a href="/admin" style="color:white;font-size:20px;text-decoration:none">←</a>
+    <div class="app-logo"><span>💬</span></div>
+    <div></div>
+  </div>
+  <div class="user-name">Group Chat Admin</div>
+  <div style="font-size:12px;opacity:0.65">{{ group_name }}</div>
+</div>
+
+<div style="padding:16px;padding-bottom:40px">
+  <!-- Controls -->
+  <div class="card" style="margin-bottom:16px">
+    <div style="font-size:13px;font-weight:800;margin-bottom:12px">🔧 Group Controls</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+      <div>
+        <div style="font-size:14px;font-weight:700">Only Admin Can Talk</div>
+        <div style="font-size:12px;color:var(--muted)">Lock group so only admins post</div>
+      </div>
+      <span style="font-size:12px;font-weight:700;color:{{ 'var(--accent)' if only_admin else 'var(--green)' }}">{{ '🔒 ON' if only_admin else '🔓 OFF' }}</span>
+    </div>
+    <div style="padding-top:12px">
+      <form method="POST" action="/admin/settings">
+        <input type="hidden" name="app_name" value="Ahmerdee Exam Practice">
+        <input type="hidden" name="exam_duration" value="40">
+        <input type="hidden" name="exam_questions" value="40">
+        <input type="hidden" name="quiz_time" value="30">
+        <input type="hidden" name="allow_reg" value="on">
+        <input type="hidden" name="group_name" value="{{ group_name }}">
+        {% if only_admin %}
+        <!-- Currently locked — button to unlock -->
+        <button type="submit" class="btn btn-outline" style="width:100%;font-size:13px">🔓 Unlock Group (Allow All)</button>
+        {% else %}
+        <input type="hidden" name="group_only_admin" value="on">
+        <button type="submit" class="btn btn-primary" style="width:100%;background:var(--gold);font-size:13px">🔒 Lock Group (Admin Only)</button>
+        {% endif %}
+      </form>
+    </div>
+  </div>
+
+  <!-- Pinned -->
+  {% if pinned %}
+  <div class="card" style="margin-bottom:16px">
+    <div style="font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">📌 Pinned Messages</div>
+    {% for p in pinned %}
+    <div style="padding:8px 0;border-bottom:1px solid var(--border)">
+      <div style="font-size:13px;white-space:pre-line">{{ p.message[:200] }}</div>
+      <button class="action-sm" style="margin-top:4px;color:var(--red)" onclick="unpin('{{ p.id }}')">Unpin</button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Messages -->
+  <div style="font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Recent Messages (last 200)</div>
+  {% for m in messages|reverse %}
+  <div class="amsg">
+    <div style="width:32px;height:32px;border-radius:10px;background:{% if m.from_role in ['admin','super_admin'] %}linear-gradient(135deg,var(--gold),var(--gold2)){% elif m.from=='system' %}linear-gradient(135deg,#6B7280,#4b5563){% else %}linear-gradient(135deg,var(--accent),#8B1A2C){% endif %};display:flex;align-items:center;justify-content:center;color:{% if m.from_role in ['admin','super_admin'] %}var(--navy){% else %}white{% endif %};font-size:14px;flex-shrink:0">{{ m.from_name[0] if m.from_name else '📢' }}</div>
+    <div style="flex:1;min-width:0">
+      <div class="amsg-name {{ 'admin-name' if m.from_role in ['admin','super_admin'] else '' }}">{{ m.from_name }} {% if m.from_role in ['admin','super_admin'] %}<span style="font-size:9px;background:rgba(245,200,66,0.2);color:var(--gold2);padding:1px 5px;border-radius:4px">ADMIN</span>{% endif %}</div>
+      <div class="amsg-text">{{ m.message }}</div>
+      <div class="amsg-time">{{ m.time[11:16] }}</div>
+      <div class="amsg-actions">
+        <button class="action-sm" onclick="pinMsg('{{ m.id }}')">📌 Pin</button>
+        <button class="action-sm" style="color:var(--red)" onclick="deleteMsg('{{ m.id }}')">🗑 Delete</button>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+<script src="/static/js/app.js"></script>
+<script>
+function pinMsg(id) {
+  fetch('/api/group/pin', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({msg_id:id,action:'pin'})})
+    .then(r=>r.json()).then(d=>{ showToast(d.success?'Message pinned!':'Error','success'); if(d.success) setTimeout(()=>location.reload(),1000); });
+}
+function unpin(id) {
+  fetch('/api/group/pin', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({msg_id:id,action:'unpin'})})
+    .then(r=>r.json()).then(d=>{ showToast(d.success?'Unpinned':'Error','success'); if(d.success) setTimeout(()=>location.reload(),1000); });
+}
+function deleteMsg(id) {
+  if(!confirm('Delete this message?')) return;
+  fetch('/api/group/delete', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({msg_id:id})})
+    .then(r=>r.json()).then(d=>{ showToast(d.success?'Deleted':'Error',d.success?'success':'error'); if(d.success) setTimeout(()=>location.reload(),500); });
+}
+</script>
+</body>
+</html>

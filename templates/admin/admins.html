@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}" dir="{{ 'rtl' if lang == 'ar' else 'ltr' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Manage Admins - AEP Super Admin</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<div class="app-header">
+  <div class="header-top">
+    <a href="/admin" style="color:white;font-size:20px;text-decoration:none">←</a>
+    <div class="app-logo"><span class="logo-aep">👑</span></div>
+    <div></div>
+  </div>
+  <div class="user-name">Manage Admins</div>
+  <div style="font-size:12px;opacity:0.65">Super Admin Control</div>
+</div>
+
+<div style="padding:16px">
+
+  <div style="font-size:13px;font-weight:800;margin-bottom:10px;color:var(--muted);text-transform:uppercase">Current Admins</div>
+  {% for a in admins %}
+  <div class="user-item">
+    <div class="user-avatar" style="{{ 'background:linear-gradient(135deg,var(--gold),#d4891a)' if a.role=='super_admin' else '' }}">
+      {{ a.name[0].upper() }}
+    </div>
+    <div class="user-info">
+      <div class="user-name-txt">{{ a.name }}</div>
+      <div class="user-reg-txt">{{ a.email }}</div>
+    </div>
+    <div>
+      {% if a.role == 'super_admin' %}
+      <span style="font-size:11px;font-weight:800;background:var(--gold);color:white;padding:4px 8px;border-radius:8px">FOUNDER</span>
+      {% else %}
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-outline btn-sm" onclick="setRole('{{ a.id }}','student')" style="border-color:var(--red);color:var(--red)">Remove</button>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+
+  <div style="font-size:13px;font-weight:800;margin:20px 0 10px;color:var(--muted);text-transform:uppercase">Promote Student to Admin</div>
+  <div class="card">
+    <div class="form-group" style="margin-bottom:0">
+      <label class="form-label">Select Student</label>
+      <select class="form-control" id="promote-uid">
+        <option value="">-- Choose Student --</option>
+        {% for s in students %}
+        <option value="{{ s.id }}">{{ s.name }} ({{ s.reg_number }})</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button class="btn btn-gold" style="margin-top:12px" onclick="promoteAdmin()">👑 Promote to Admin</button>
+  </div>
+
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+<script src="/static/js/app.js"></script>
+<script>
+async function promoteAdmin() {
+  const uid = document.getElementById('promote-uid').value;
+  if (!uid) { showToast('Select a student first.','warning'); return; }
+  const res = await postJSON('/admin/set_role', { uid, role: 'admin' });
+  if (res?.success) setTimeout(() => location.reload(), 800);
+}
+</script>
+</body>
+</html>

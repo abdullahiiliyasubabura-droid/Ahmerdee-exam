@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}" dir="{{ 'rtl' if lang == 'ar' else 'ltr' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Admin Dashboard - AEP</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+<div class="app-header">
+  <div class="header-top">
+    <div class="app-logo">
+      <span class="logo-aep">AEP</span>
+      <span class="logo-sub">Admin Panel</span>
+    </div>
+    <div class="header-icons">
+      <a href="/logout" class="icon-btn">🚪</a>
+    </div>
+  </div>
+  <div class="user-greeting">Logged in as</div>
+  <div class="user-name">{{ user.name }} 
+    {% if user.role == 'super_admin' %}<span style="font-size:12px;background:var(--gold);color:white;padding:2px 8px;border-radius:8px;font-weight:800">SUPER ADMIN</span>{% endif %}
+  </div>
+  <div class="lang-bar" style="margin-top:10px">
+    <a href="/set_lang/en" class="lang-btn {{ 'active' if lang=='en' else '' }}">EN</a>
+    <a href="/set_lang/ha" class="lang-btn {{ 'active' if lang=='ha' else '' }}">HA</a>
+    <a href="/set_lang/ar" class="lang-btn {{ 'active' if lang=='ar' else '' }}">عربي</a>
+    <a href="/set_lang/zh" class="lang-btn {{ 'active' if lang=='zh' else '' }}">中文</a>
+  </div>
+</div>
+
+<div class="page-content">
+  <div class="admin-stat-grid">
+    <div class="admin-stat blue">
+      <div class="admin-stat-val">{{ total_users }}</div>
+      <div class="admin-stat-lbl">Students</div>
+    </div>
+    <div class="admin-stat green">
+      <div class="admin-stat-val">{{ total_questions }}</div>
+      <div class="admin-stat-lbl">Questions</div>
+    </div>
+    <div class="admin-stat gold">
+      <div class="admin-stat-val">{{ total_results }}</div>
+      <div class="admin-stat-lbl">Results</div>
+    </div>
+    <div class="admin-stat">
+      <div class="admin-stat-val" style="color:var(--red)">{{ pending_reports }}</div>
+      <div class="admin-stat-lbl">Reports</div>
+    </div>
+    <div class="admin-stat purple">
+      <div class="admin-stat-val">{{ total_books }}</div>
+      <div class="admin-stat-lbl">Books</div>
+    </div>
+    <div class="admin-stat">
+      <div class="admin-stat-val" style="color:var(--gold)">{{ open_tickets }}</div>
+      <div class="admin-stat-lbl">Tickets</div>
+    </div>
+  </div>
+
+  <div class="admin-menu-list">
+    <a href="/admin/users" class="admin-menu-item">
+      <div class="admin-menu-icon" style="background:linear-gradient(135deg,#3B82F6,#1d4ed8)">👥</div>
+      <div class="admin-menu-text">
+        <div class="admin-menu-title">Manage Users</div>
+        <div class="admin-menu-sub">View, warn, block, ban students</div>
+      </div>
+      <div class="admin-menu-arrow">›</div>
+    </a>
+    <a href="/admin/questions" class="admin-menu-item">
+      <div class="admin-menu-icon" style="background:linear-gradient(135deg,var(--green),#009e7f)">❓</div>
+      <div class="admin-menu-text">
+        <div class="admin-menu-title">Manage Questions</div>
+        <div class="admin-menu-sub">Add, edit, delete exam questions</div>
+      </div>
+      <div class="admin-menu-arrow">›</div>
+    </a>
+    <a href="/admin/results" class="admin-menu-item">
+      <div class="admin-menu-icon" style="background:linear-gradient(135deg,var(--accent),#c42a47)">🏆</div>
+      <div class="admin-menu-text">
+        <div class="admin-menu-title">View All Results</div>
+        <div class="admin-menu-sub">All exam results and certificates</div>
+      </div>
+      <div class="admin-menu-arrow">›</div>
+    </a>
+    <a href="/admin/reports" class="admin-menu-item">
+      <div class="admin-menu-icon" style="background:linear-gradient(135deg,#EF4444,#b91c1c)">⚠️</div>
+      <div class="admin-menu-text">
+        <div class="admin-menu-title">User Reports</div>
+        <div class="admin-menu-sub">{{ pending_reports }} pending reports</div>
+      </div>
+      <div class="admin-menu-arrow">›</div>
+    </a>
+    <a href="/admin/support" class="admin-menu-item">
+      <div class="admin-menu-icon" style="background:linear-gradient(135deg,#10B981,#059669)">🎫</div>
+      <div class="admin-menu-text">
+        <div class="admin-menu-title">Support Tickets</div>
+        <div class="admin-menu-sub">{{ open_tickets }} open tickets</div>
+      </div>
+      <div class="admin-menu-arrow">›</div>
+    </a>
+    <a href="/admin/books" class="admin-menu-item">
+      <div class="admin-menu-icon" style="background:linear-gradient(135deg,#8B5CF6,#6d28d9)">📚</div>
+      <div class="admin-menu-text">
+        <div class="admin-menu-title">Book Library</div>
+        <div class="admin-menu-sub">Upload and manage PDF books</div>
+      </div>
+      <div class="admin-menu-arrow">›</div>
+    </a>
+    <a href="/admin/broadcast" class="admin-menu-item">
+      <div class="admin-menu-icon" style="background:linear-gradient(135deg,var(--gold),#d4891a)">📢</div>
+      <div class="admin-menu-text">
+        <div class="admin-menu-title">Broadcast</div>
+        <div class="admin-menu-sub">Send messages to all/specific users</div>
+      </div>
+      <div class="admin-menu-arrow">›</div>
+    </a>
+    {% if user.role == 'super_admin' %}
+    <a href="/admin/quizzes" class="admin-menu-item">
+      <div class="admin-menu-icon" style="background:linear-gradient(135deg,#E94560,#C5253F)">⚡</div>
+      <div class="admin-menu-text"><div class="admin-menu-title">Quiz Manager</div><div class="admin-menu-sub">Approve, schedule & run live quizzes</div></div>
+      <div class="admin-menu-arrow">›</div>
+    </a>
+    <a href="/admin/group" class="admin-menu-item">
+      <div class="admin-menu-icon" style="background:linear-gradient(135deg,#22C55E,#15803D)">💬</div>
+      <div class="admin-menu-text"><div class="admin-menu-title">Group Chat Admin</div><div class="admin-menu-sub">Pin messages, lock/unlock group</div></div>
+      <div class="admin-menu-arrow">›</div>
+    </a>
+    <a href="/admin/admins" class="admin-menu-item">
+      <div class="admin-menu-icon" style="background:linear-gradient(135deg,#F59E0B,#d97706)">👑</div>
+      <div class="admin-menu-text">
+        <div class="admin-menu-title">Manage Admins</div>
+        <div class="admin-menu-sub">Add, promote, demote admins</div>
+      </div>
+      <div class="admin-menu-arrow">›</div>
+    </a>
+    <a href="/admin/settings" class="admin-menu-item">
+      <div class="admin-menu-icon" style="background:linear-gradient(135deg,#6B7280,#4b5563)">⚙️</div>
+      <div class="admin-menu-text">
+        <div class="admin-menu-title">App Settings</div>
+        <div class="admin-menu-sub">Configure exam duration, registration, etc.</div>
+      </div>
+      <div class="admin-menu-arrow">›</div>
+    </a>
+    {% endif %}
+  </div>
+
+  <div style="height:20px"></div>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+<script src="/static/js/app.js"></script>
+</body>
+</html>
