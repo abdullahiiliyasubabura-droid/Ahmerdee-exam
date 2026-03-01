@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}" dir="{{ 'rtl' if lang == 'ar' else 'ltr' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>{{ subject }} Practice - AEP</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <style>
+    .option-btn { width:100%; text-align:left; padding:14px 16px; border-radius:14px; border:2px solid var(--border); background:white; font-size:14px; font-weight:600; font-family:var(--font); cursor:pointer; margin-bottom:10px; transition:all 0.2s; display:flex; align-items:center; gap:12px; }
+    .option-btn .opt-letter { width:30px; height:30px; border-radius:8px; background:var(--bg); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:13px; flex-shrink:0; }
+    .option-btn.correct { background:#dcfce7; border-color:#16a34a; }
+    .option-btn.correct .opt-letter { background:#16a34a; color:white; }
+    .option-btn.wrong { background:#fee2e2; border-color:#dc2626; }
+    .option-btn.wrong .opt-letter { background:#dc2626; color:white; }
+    .option-btn.correct-highlight { background:#dcfce7; border-color:#16a34a; }
+    .option-btn.correct-highlight .opt-letter { background:#16a34a; color:white; }
+    .option-btn:disabled { cursor:default; }
+    .feedback-box { border-radius:14px; padding:14px 16px; margin-top:8px; font-size:13px; line-height:1.5; display:none; }
+    .feedback-box.show { display:block; }
+    .feedback-correct { background:#dcfce7; border:1.5px solid #16a34a; color:#15803d; }
+    .feedback-wrong { background:#fee2e2; border:1.5px solid #dc2626; color:#b91c1c; }
+    .nav-bar { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:480px; background:white; border-top:1px solid var(--border); padding:10px 16px; display:flex; gap:8px; z-index:100; }
+    .q-counter { text-align:center; font-size:11px; font-weight:700; color:var(--muted); padding:4px 0; }
+  </style>
+</head>
+<body>
+<div class="exam-header">
+  <div style="flex:1">
+    <div class="exam-title">{{ subject }}</div>
+    <div style="font-size:10px;opacity:0.7;text-transform:uppercase;letter-spacing:1px;margin-top:2px">📚 PRACTICE MODE — {{ questions|length }} Questions</div>
+    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="prog" style="width:0%"></div></div>
+  </div>
+</div>
+
+<div style="padding:0 0 90px">
+  <div class="question-card" id="q-card">
+    <div class="q-counter" id="q-counter">Question 1 of {{ questions|length }}</div>
+    <div class="q-number" id="q-num">Question 1</div>
+    <div class="q-text" id="q-text">Loading...</div>
+    <div id="options"></div>
+    <div class="feedback-box" id="feedback"></div>
+  </div>
+</div>
+
+<div class="nav-bar">
+  <button class="btn btn-outline" id="prev-btn" onclick="prevQ()" style="flex:1;padding:11px">‹ Prev</button>
+  <button class="btn btn-primary" id="next-btn" onclick="nextQ()" style="flex:2;padding:11px">Next ›</button>
+  <button class="btn btn-gold" onclick="finishPractice()" style="flex:1;padding:11px">✅</button>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+<script src="/static/js/app.js"></script>
+<script>
+const QUESTIONS = {{ questions|tojson }};
+const SUBJECT = "{{ subject }}";
+let current = 0;
+const answered = {};
+
+function render() {
+  const q = QUESTIONS[current];
+  document.getElementById('q-num').textContent = `Question ${current+1}`;
+  document.getElementById('q-counter').textContent = `Question ${current+1} of ${QUESTIONS.length}`;
+  document.getElementById('q-text').textContent = q.question;
+  document.getElementById('prog').style.width = ((current+1)/QUESTIONS.length*100)+'%';
+  const opts = document.getElementById('options');
+  opts.innerHTML = '';
+  const fb = document.getElementById('feedback');
+  fb.className = 'feedback-box'; fb.innerHTML = '';
+  const selected = answered[q.id];
+  ['A','B','C','D'].forEach(letter => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerHTML = `<span class="opt-letter">${letter}</span><span>${q.options[letter]}</span>`;
+    if (selected) {
+      btn.disabled = true;
+      if (letter === q.answer) btn.classList.add('correct-highlight');
+      if (letter === selected && selected !== q.answer) btn.classList.add('wrong');
+      if (letter === selected && selected === q.answer) btn.classList.add('correct');
+    } else {
+      btn.onclick = () => selectAnswer(letter, q);
+    }
+    opts.appendChild(btn);
+  });
+  if (selected) showFeedback(q, selected);
+  document.getElementById('prev-btn').style.opacity = current===0 ? '0.4' : '1';
+}
+
+function selectAnswer(letter, q) {
+  answered[q.id] = letter;
+  render();
+}
+
+function showFeedback(q, selected) {
+  const fb = document.getElementById('feedback');
+  const isCorrect = selected === q.answer;
+  if (isCorrect) {
+    fb.className = 'feedback-box feedback-correct show';
+    fb.innerHTML = `✅ <strong>Correct!</strong> ${q.explanation || ''}`;
+  } else {
+    fb.className = 'feedback-box feedback-wrong show';
+    fb.innerHTML = `❌ <strong>Wrong!</strong> Correct answer is <strong>${q.answer}: ${q.options[q.answer]}</strong>. ${q.explanation || ''}`;
+  }
+}
+
+function nextQ() {
+  if (current < QUESTIONS.length-1) { current++; render(); }
+  else finishPractice();
+}
+function prevQ() { if (current > 0) { current--; render(); } }
+
+function finishPractice() {
+  const answers = {};
+  QUESTIONS.forEach(q => { if (answered[q.id]) answers[q.id] = answered[q.id]; });
+  fetch('/submit_exam', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({mode:'practice',subject:SUBJECT,answers,questions:QUESTIONS})
+  }).then(r=>r.json()).then(d=>{
+    if(d.success) window.location.href='/result/'+d.result_id;
+  });
+}
+
+render();
+</script>
+</body>
+</html>

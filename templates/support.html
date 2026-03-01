@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}" dir="{{ 'rtl' if lang == 'ar' else 'ltr' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>{{ t('support') }} - AEP</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<div class="app-header">
+  <div class="header-top">
+    <a href="/dashboard" style="color:white;font-size:20px;text-decoration:none">←</a>
+    <div class="app-logo"><span class="logo-aep">🎫</span></div>
+    <div></div>
+  </div>
+  <div class="user-name">{{ t('support') }}</div>
+  <div style="font-size:12px;opacity:0.65">Contact admin for help</div>
+</div>
+
+<div class="page-content" style="padding:16px 16px 90px">
+  {% if success_msg %}
+  <div class="alert alert-success">✅ {{ success_msg }}</div>
+  {% endif %}
+
+  <div class="card">
+    <div style="font-size:14px;font-weight:800;margin-bottom:12px">📨 Send Message to Admin</div>
+    <form method="POST" action="/support">
+      <div class="form-group">
+        <label class="form-label">Your Message / Complaint</label>
+        <textarea name="message" class="form-control" placeholder="Describe your issue or question..." rows="4" style="resize:none" required></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary">📤 {{ t('complaint') }}</button>
+    </form>
+  </div>
+
+  {% if tickets %}
+  <div style="font-size:13px;font-weight:800;margin:16px 0 10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">📋 My Tickets</div>
+  {% for tk in tickets %}
+  <div class="ticket-item">
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+      <span class="ticket-status {{ 'status-replied' if tk.status == 'replied' else 'status-open' }}">
+        {{ tk.status|upper }}
+      </span>
+      <span class="ticket-date">{{ tk.date[:10] }}</span>
+    </div>
+    <div class="ticket-msg">{{ tk.message }}</div>
+    {% for reply in tk.get('replies', []) %}
+    <div class="ticket-reply">
+      <div style="font-size:10px;font-weight:800;color:var(--accent);margin-bottom:4px">Admin Reply — {{ reply.date[:10] }}</div>
+      <p>{{ reply.message }}</p>
+    </div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+  {% endif %}
+</div>
+
+<nav class="bottom-nav">
+  <a href="/dashboard" class="nav-item"><span class="nav-icon">🏠</span><span>Home</span></a>
+  <a href="/subjects" class="nav-item"><span class="nav-icon">📚</span><span>Subjects</span></a>
+  <div class="nav-center-wrap"><a href="/subjects?mode=exam" class="nav-center">📝</a></div>
+  <a href="/library" class="nav-item"><span class="nav-icon">📖</span><span>Library</span></a>
+  <a href="/support" class="nav-item active"><span class="nav-icon">🎫</span><span>Support</span></a>
+</nav>
+
+<div id="toast-container" class="toast-container"></div>
+<script src="/static/js/app.js"></script>
+</body>
+</html>

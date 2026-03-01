@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}" dir="{{ 'rtl' if lang == 'ar' else 'ltr' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>{{ t('profile') }} - AEP</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<div class="profile-hero">
+  <div class="profile-avatar">{{ user.name[0].upper() }}</div>
+  <div class="profile-name">{{ user.name }}</div>
+  <div class="profile-reg">{{ user.reg_number }}</div>
+  <div style="font-size:12px;opacity:0.6;margin-top:6px">{{ user.school }}</div>
+  <div class="lang-bar" style="margin-top:14px;justify-content:center">
+    <a href="/set_lang/en" class="lang-btn {{ 'active' if lang=='en' else '' }}">EN</a>
+    <a href="/set_lang/ha" class="lang-btn {{ 'active' if lang=='ha' else '' }}">HA</a>
+    <a href="/set_lang/ar" class="lang-btn {{ 'active' if lang=='ar' else '' }}">عربي</a>
+    <a href="/set_lang/zh" class="lang-btn {{ 'active' if lang=='zh' else '' }}">中文</a>
+  </div>
+</div>
+
+<div style="padding:16px">
+  {% if success_msg %}
+  <div class="alert alert-success">✅ {{ success_msg }}</div>
+  {% endif %}
+  {% if error %}
+  <div class="alert alert-error">❌ {{ error }}</div>
+  {% endif %}
+
+  <div class="card">
+    <div style="font-size:13px;font-weight:800;margin-bottom:14px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">📌 My Info</div>
+    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:13px;color:var(--muted);font-weight:600">Reg. Number</span>
+      <span style="font-size:13px;font-weight:900;color:var(--accent)">{{ user.reg_number }}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:13px;color:var(--muted);font-weight:600">State</span>
+      <span style="font-size:13px;font-weight:700">{{ user.state }}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:13px;color:var(--muted);font-weight:600">Email</span>
+      <span style="font-size:12px;font-weight:700">{{ user.email }}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:8px 0">
+      <span style="font-size:13px;color:var(--muted);font-weight:600">Joined</span>
+      <span style="font-size:13px;font-weight:700">{{ user.created[:10] }}</span>
+    </div>
+  </div>
+
+  <form method="POST" action="/profile">
+    <div style="font-size:13px;font-weight:800;margin-bottom:12px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">✏️ Edit Profile</div>
+    <div class="form-group">
+      <label class="form-label">{{ t('full_name') }}</label>
+      <input type="text" name="name" class="form-control" value="{{ user.name }}">
+    </div>
+    <div class="form-group">
+      <label class="form-label">{{ t('phone') }}</label>
+      <input type="tel" name="phone" class="form-control" value="{{ user.phone }}">
+    </div>
+    <div class="form-group">
+      <label class="form-label">{{ t('address') }}</label>
+      <input type="text" name="address" class="form-control" value="{{ user.address }}">
+    </div>
+    <div class="form-group">
+      <label class="form-label">New Password (leave blank to keep)</label>
+      <input type="password" name="new_password" class="form-control" placeholder="New password...">
+    </div>
+    <button type="submit" class="btn btn-primary">💾 {{ t('save') }}</button>
+  </form>
+
+  <div style="margin-top:16px">
+    <a href="/logout" class="btn btn-outline" style="text-decoration:none;color:var(--red);border-color:var(--red)">🚪 {{ t('logout') }}</a>
+  </div>
+
+  <div style="height:90px"></div>
+</div>
+
+<nav class="bottom-nav">
+  <a href="/dashboard" class="nav-item"><span class="nav-icon">🏠</span><span>Home</span></a>
+  <a href="/subjects" class="nav-item"><span class="nav-icon">📚</span><span>Subjects</span></a>
+  <div class="nav-center-wrap"><a href="/subjects?mode=exam" class="nav-center">📝</a></div>
+  <a href="/my_results" class="nav-item"><span class="nav-icon">🏆</span><span>Results</span></a>
+  <a href="/profile" class="nav-item active"><span class="nav-icon">👤</span><span>Profile</span></a>
+</nav>
+
+<div id="toast-container" class="toast-container"></div>
+<script src="/static/js/app.js"></script>
+</body>
+</html>

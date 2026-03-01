@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}" dir="{{ 'rtl' if lang == 'ar' else 'ltr' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>{{ t('library') }} - AEP</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<div class="app-header">
+  <div class="header-top">
+    <a href="/dashboard" style="color:white;font-size:20px;text-decoration:none">←</a>
+    <div class="app-logo"><span class="logo-aep">📖</span></div>
+    <div></div>
+  </div>
+  <div class="user-name">{{ t('library') }}</div>
+  <div style="font-size:12px;opacity:0.65">{{ books|length }} books available</div>
+</div>
+
+<div class="page-content" style="padding:12px 16px 90px">
+  {% if not books %}
+  <div style="text-align:center;padding:60px 24px">
+    <div style="font-size:50px;margin-bottom:16px">📚</div>
+    <div style="font-size:16px;font-weight:800;margin-bottom:8px">No Books Yet</div>
+    <div style="font-size:13px;color:var(--muted)">Admin will upload study materials soon.</div>
+  </div>
+  {% endif %}
+
+  {% for book in books %}
+  <div class="book-card">
+    <div class="book-icon">📕</div>
+    <div style="flex:1">
+      <div class="book-title">{{ book.title }}</div>
+      <div class="book-subject">{{ book.subject }}</div>
+      {% if book.description %}
+      <div class="book-desc">{{ book.description }}</div>
+      {% endif %}
+      <div style="font-size:11px;color:var(--muted);font-weight:600;margin-bottom:10px">
+        {{ (book.size / 1024 / 1024)|round(1) }} MB • {{ book.uploaded[:10] }}
+      </div>
+      <div class="book-actions">
+        <a href="/download_book/{{ book.id }}" class="subject-btn btn-exam-s">⬇️ {{ t('download') }}</a>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<nav class="bottom-nav">
+  <a href="/dashboard" class="nav-item"><span class="nav-icon">🏠</span><span>Home</span></a>
+  <a href="/subjects" class="nav-item"><span class="nav-icon">📚</span><span>Subjects</span></a>
+  <div class="nav-center-wrap"><a href="/subjects?mode=exam" class="nav-center">📝</a></div>
+  <a href="/library" class="nav-item active"><span class="nav-icon">📖</span><span>Library</span></a>
+  <a href="/profile" class="nav-item"><span class="nav-icon">👤</span><span>Profile</span></a>
+</nav>
+
+<div id="toast-container" class="toast-container"></div>
+<script src="/static/js/app.js"></script>
+</body>
+</html>

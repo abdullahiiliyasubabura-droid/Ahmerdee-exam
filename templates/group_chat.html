@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}" dir="{{ 'rtl' if lang == 'ar' else 'ltr' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>{{ group_name }} - AEP</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <style>
+    body { display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+    .chat-header { flex-shrink:0; background:linear-gradient(135deg,var(--navy),var(--blue)); color:white; padding:12px 16px 12px; display:flex; align-items:center; gap:12px; padding-top:calc(12px + env(safe-area-inset-top)); }
+    .group-avatar { width:44px; height:44px; border-radius:14px; background:linear-gradient(135deg,var(--gold),var(--gold2)); display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+    .chat-body { flex:1; overflow-y:auto; padding:12px 16px; background:var(--bg); display:flex; flex-direction:column; gap:6px; }
+    .pin-banner { background:rgba(245,200,66,0.1); border:1px solid rgba(245,200,66,0.3); border-radius:12px; padding:10px 14px; margin-bottom:8px; }
+    .pin-icon { font-size:11px; color:var(--gold); font-weight:800; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; }
+    .pin-text { font-size:13px; font-weight:600; white-space:pre-line; }
+    .msg-wrap { display:flex; flex-direction:column; max-width:80%; }
+    .msg-wrap.mine { align-self:flex-end; align-items:flex-end; }
+    .msg-wrap.theirs { align-self:flex-start; }
+    .msg-wrap.system { align-self:center; max-width:95%; }
+    .msg-sender { font-size:11px; font-weight:800; color:var(--accent); margin-bottom:2px; }
+    .msg-sender.admin { color:var(--gold); }
+    .msg-bubble { border-radius:16px; padding:10px 14px; font-size:14px; line-height:1.5; word-break:break-word; white-space:pre-line; }
+    .msg-wrap.mine .msg-bubble { background:var(--accent); color:white; border-bottom-right-radius:4px; }
+    .msg-wrap.theirs .msg-bubble { background:white; color:var(--text); border-bottom-left-radius:4px; box-shadow:0 1px 4px rgba(0,0,0,0.08); }
+    .msg-wrap.system .msg-bubble { background:rgba(245,200,66,0.12); border:1px solid rgba(245,200,66,0.25); color:var(--text); border-radius:12px; text-align:center; font-size:13px; }
+    .msg-time { font-size:10px; color:var(--muted); margin-top:2px; }
+    .chat-input-area { flex-shrink:0; background:white; border-top:1px solid var(--border); padding:10px 16px; padding-bottom:calc(10px + env(safe-area-inset-bottom)); display:flex; align-items:center; gap:10px; }
+    .chat-input { flex:1; background:var(--bg); border:1.5px solid var(--border); border-radius:24px; padding:12px 18px; font-size:14px; font-family:var(--font); outline:none; resize:none; max-height:100px; line-height:1.4; }
+    .chat-input:focus { border-color:var(--accent); }
+    .send-btn { width:44px; height:44px; border-radius:50%; background:var(--accent); border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+    .online-badge { font-size:10px; background:rgba(34,197,94,0.2); color:#16a34a; padding:2px 8px; border-radius:50px; font-weight:700; }
+    .admin-badge { font-size:9px; background:rgba(245,200,66,0.2); color:var(--gold2); padding:2px 7px; border-radius:50px; font-weight:800; margin-left:4px; text-transform:uppercase; letter-spacing:0.5px; }
+    .lock-banner { background:rgba(233,69,96,0.1); border:1px solid rgba(233,69,96,0.2); border-radius:12px; padding:10px 14px; text-align:center; font-size:13px; color:var(--red); font-weight:600; margin:8px 16px; }
+    .only-admin-input { background:var(--bg); text-align:center; padding:12px; color:var(--muted); font-size:13px; font-weight:600; }
+  </style>
+</head>
+<body>
+<div class="chat-header">
+  <a href="/dashboard" style="color:white;font-size:20px;text-decoration:none;flex-shrink:0">←</a>
+  <div class="group-avatar">👥</div>
+  <div style="flex:1;min-width:0">
+    <div style="font-weight:800;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ group_name }}</div>
+    <div style="font-size:11px;opacity:0.7" id="member-count">All JAMB students</div>
+  </div>
+  {% if user.role in ['admin','super_admin'] %}
+  <a href="/admin/group" style="color:rgba(255,255,255,0.7);font-size:13px;text-decoration:none;font-weight:600">Admin ⚙️</a>
+  {% endif %}
+</div>
+
+<!-- Pinned messages -->
+{% if pinned %}
+<div style="padding:8px 12px 0;background:var(--bg)">
+  {% for p in pinned[:1] %}
+  <div class="pin-banner">
+    <div class="pin-icon">📌 Pinned</div>
+    <div class="pin-text">{{ p.message[:120] }}{% if p.message|length > 120 %}...{% endif %}</div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if only_admin_can_talk and user.role == 'student' %}
+<div class="lock-banner">🔒 Only admin can send messages right now</div>
+{% endif %}
+
+<div class="chat-body" id="chat-body">
+  {% for m in messages %}
+  {% set is_mine = m.from == user.id %}
+  {% set is_admin = m.from_role in ['admin','super_admin'] %}
+  {% set is_system = m.from == 'system' %}
+  <div class="msg-wrap {{ 'mine' if is_mine else ('system' if is_system else 'theirs') }}">
+    {% if not is_mine and not is_system %}
+    <div class="msg-sender {{ 'admin' if is_admin else '' }}">
+      {{ m.from_name }}
+      {% if is_admin %}<span class="admin-badge">Admin</span>{% endif %}
+    </div>
+    {% endif %}
+    <div class="msg-bubble">{{ m.message }}</div>
+    <div class="msg-time">{{ m.time[11:16] }}</div>
+  </div>
+  {% endfor %}
+</div>
+
+{% if not only_admin_can_talk or user.role in ['admin','super_admin'] %}
+<div class="chat-input-area">
+  <textarea class="chat-input" id="msg-input" placeholder="Message..." rows="1"
+    onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg()}"
+    oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
+  <button class="send-btn" onclick="sendMsg()">➤</button>
+</div>
+{% else %}
+<div class="only-admin-input">🔒 Read-only mode — Only admin can post</div>
+{% endif %}
+
+<div id="toast-container" class="toast-container"></div>
+<script src="/static/js/app.js"></script>
+<script>
+let lastTime = "{{ messages[-1].time if messages else '' }}";
+
+function sendMsg() {
+  const input = document.getElementById('msg-input');
+  const message = input.value.trim();
+  if (!message) return;
+  input.value = ''; input.style.height = 'auto';
+  fetch('/api/group/send', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({message})
+  }).then(r=>r.json()).then(d=>{
+    if(d.success) appendMsg(d.msg, true);
+    else showToast(d.message||'Error', 'error');
+  });
+}
+
+function appendMsg(m, isMine) {
+  const body = document.getElementById('chat-body');
+  const isAdmin = m.from_role==='admin'||m.from_role==='super_admin';
+  const isSystem = m.from==='system';
+  const div = document.createElement('div');
+  div.className = `msg-wrap ${isMine?'mine':isSystem?'system':'theirs'}`;
+  div.innerHTML = `
+    ${!isMine&&!isSystem?`<div class="msg-sender ${isAdmin?'admin':''}">${m.from_name}${isAdmin?'<span class="admin-badge">Admin</span>':''}</div>`:''}
+    <div class="msg-bubble">${m.message.replace(/\n/g,'<br>')}</div>
+    <div class="msg-time">${m.time.substring(11,16)}</div>
+  `;
+  body.appendChild(div);
+  body.scrollTop = body.scrollHeight;
+  lastTime = m.time;
+}
+
+function pollMessages() {
+  fetch(`/api/group/messages?since=${encodeURIComponent(lastTime)}`)
+    .then(r=>r.json())
+    .then(d=>{
+      const msgs = d.messages||[];
+      msgs.forEach(m=>{
+        if(m.from !== '{{ user.id }}') appendMsg(m, false);
+        lastTime = m.time;
+      });
+    }).catch(()=>{});
+}
+
+// Scroll to bottom on load
+window.addEventListener('load', ()=>{
+  const body = document.getElementById('chat-body');
+  body.scrollTop = body.scrollHeight;
+});
+
+// Poll every 3 seconds
+setInterval(pollMessages, 3000);
+</script>
+</body>
+</html>

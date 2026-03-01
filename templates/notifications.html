@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}" dir="{{ 'rtl' if lang == 'ar' else 'ltr' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>{{ t('notifications') }} - AEP</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<div class="app-header">
+  <div class="header-top">
+    <a href="/dashboard" style="color:white;font-size:20px;text-decoration:none">←</a>
+    <div class="app-logo"><span class="logo-aep">🔔</span></div>
+    <div></div>
+  </div>
+  <div class="user-name">{{ t('notifications') }}</div>
+</div>
+
+<div class="page-content" style="padding:12px 16px 90px">
+  {% if not broadcasts %}
+  <div style="text-align:center;padding:60px 24px">
+    <div style="font-size:50px">🔔</div>
+    <div style="font-size:15px;font-weight:800;margin:12px 0 6px">No Notifications</div>
+    <div style="font-size:13px;color:var(--muted)">Admin announcements will appear here.</div>
+  </div>
+  {% endif %}
+  {% for bc in broadcasts %}
+  <div class="card">
+    <div style="display:flex;align-items:flex-start;gap:10px">
+      <div style="font-size:24px">📢</div>
+      <div style="flex:1">
+        <div style="font-size:10px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">
+          {{ 'Direct Message' if bc.target_id else 'Broadcast' }} • {{ bc.date[:10] }}
+        </div>
+        <div style="font-size:14px;font-weight:600;line-height:1.6">{{ bc.message }}</div>
+        <div style="font-size:11px;color:var(--muted);font-weight:600;margin-top:6px">From: {{ bc.by }}</div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+<script src="/static/js/app.js"></script>
+</body>
+</html>

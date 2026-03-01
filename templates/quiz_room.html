@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}" dir="{{ 'rtl' if lang == 'ar' else 'ltr' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Quiz Live - AEP</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <style>
+    .quiz-timer { font-size:48px; font-weight:900; text-align:center; font-family:var(--font); margin:16px 0; transition:color 0.3s; }
+    .quiz-timer.danger { color:var(--red); animation:shake 0.3s infinite; }
+    @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+    .participant-row { display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--border); }
+    .participant-score { font-size:18px; font-weight:900; color:var(--accent); margin-left:auto; }
+    .opt-btn { width:100%; text-align:left; padding:14px 16px; border-radius:14px; border:2px solid var(--border); background:white; font-size:14px; font-weight:600; font-family:var(--font); cursor:pointer; margin-bottom:10px; display:flex; align-items:center; gap:12px; transition:all 0.2s; }
+    .opt-btn .ol { width:30px; height:30px; border-radius:8px; background:var(--bg); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:13px; flex-shrink:0; }
+    .opt-btn.correct { background:#dcfce7; border-color:#16a34a; }
+    .opt-btn.wrong { background:#fee2e2; border-color:#dc2626; }
+    .opt-btn.correct-hl { background:#dcfce7; border-color:#16a34a; }
+    .opt-btn.correct-hl .ol { background:#16a34a; color:white; }
+    .opt-btn:disabled { cursor:default; }
+    .waiting-screen { text-align:center; padding:60px 24px; }
+  </style>
+</head>
+<body>
+<div class="exam-header">
+  <div style="flex:1">
+    <div class="exam-title">⚡ LIVE QUIZ</div>
+    <div style="font-size:11px;opacity:0.7;margin-top:2px">{{ subject }} • Quiz ID: {{ quiz.id }}</div>
+    <div class="progress-bar-wrap"><div class="progress-bar-fill" id="prog" style="width:0%"></div></div>
+  </div>
+  <div class="exam-timer" id="timer-display">--</div>
+</div>
+
+<div style="padding:0 0 80px">
+  <!-- Waiting screen -->
+  <div id="waiting-screen" class="waiting-screen">
+    <div style="font-size:60px;margin-bottom:16px">⏳</div>
+    <div style="font-size:18px;font-weight:800;margin-bottom:8px">Waiting for Admin to start...</div>
+    <div style="font-size:13px;color:var(--muted)">The quiz will begin shortly. Stay on this page!</div>
+    {% if quiz.scheduled_time %}
+    <div style="margin-top:16px;background:rgba(245,200,66,0.1);border:1px solid rgba(245,200,66,0.3);border-radius:12px;padding:12px">
+      <div style="font-size:11px;color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:1px">Scheduled Time</div>
+      <div style="font-size:16px;font-weight:800;margin-top:4px">{{ quiz.scheduled_time }}</div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Active question screen -->
+  <div id="question-screen" style="display:none">
+    <div class="question-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div class="q-number" id="q-num" style="margin-bottom:0">Q1</div>
+        <div class="quiz-timer" id="q-timer" style="font-size:28px;margin:0">30</div>
+      </div>
+      <div class="q-text" id="q-text">Loading...</div>
+      <div id="options"></div>
+      <div id="feedback" style="display:none;border-radius:12px;padding:12px 14px;font-size:13px;margin-top:8px"></div>
+    </div>
+
+    <!-- Scoreboard -->
+    <div class="card" style="margin:0 16px">
+      <div style="font-size:12px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">🏆 Live Scores</div>
+      <div id="scoreboard"></div>
+    </div>
+  </div>
+
+  <!-- Finished screen -->
+  <div id="finished-screen" style="display:none;text-align:center;padding:40px 24px">
+    <div style="font-size:50px;margin-bottom:16px">🏆</div>
+    <div style="font-size:20px;font-weight:900;margin-bottom:8px">Quiz Finished!</div>
+    <div style="font-size:14px;color:var(--muted);margin-bottom:20px">Results posted in Group Chat</div>
+    <div id="final-scores" style="text-align:left"></div>
+    <a href="/group" class="btn btn-primary" style="text-decoration:none;margin-top:16px">📢 View Results in Group Chat</a>
+  </div>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+<script src="/static/js/app.js"></script>
+<script>
+const QUIZ_ID = "{{ quiz.id }}";
+const QUESTIONS = {{ questions|tojson }};
+const MY_UID = "{{ user.id }}";
+const TIME_PER_Q = {{ quiz.time_per_question or 30 }};
+
+let currentQIndex = -1;
+let timerInterval = null;
+let answered = false;
+let timeLeft = TIME_PER_Q;
+let pollInterval = null;
+
+function pollState() {
+  fetch(`/api/quiz_state/${QUIZ_ID}`)
+    .then(r=>r.json())
+    .then(state => {
+      if (state.status === 'active') {
+        document.getElementById('waiting-screen').style.display = 'none';
+        document.getElementById('question-screen').style.display = 'block';
+        document.getElementById('finished-screen').style.display = 'none';
+        if (state.current_question !== currentQIndex) {
+          currentQIndex = state.current_question;
+          answered = false;
+          loadQuestion(currentQIndex, state);
+        }
+        updateScoreboard(state.scores);
+      } else if (state.status === 'finished') {
+        clearInterval(pollInterval);
+        clearInterval(timerInterval);
+        showFinished(state.scores);
+      }
+    }).catch(()=>{});
+}
+
+function loadQuestion(idx, state) {
+  clearInterval(timerInterval);
+  if (idx >= QUESTIONS.length) return;
+  const q = QUESTIONS[idx];
+  document.getElementById('q-num').textContent = `Question ${idx+1} of ${QUESTIONS.length}`;
+  document.getElementById('q-text').textContent = q.question;
+  document.getElementById('prog').style.width = ((idx+1)/QUESTIONS.length*100)+'%';
+  document.getElementById('feedback').style.display = 'none';
+  
+  // Render options
+  const opts = document.getElementById('options');
+  opts.innerHTML = '';
+  ['A','B','C','D'].forEach(letter => {
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn';
+    btn.innerHTML = `<span class="ol">${letter}</span><span>${q.options[letter]}</span>`;
+    btn.id = `opt-${letter}`;
+    btn.onclick = () => submitAnswer(letter, q.id, q);
+    opts.appendChild(btn);
+  });
+  
+  // Start timer
+  timeLeft = TIME_PER_Q;
+  updateTimerDisplay();
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    updateTimerDisplay();
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      if (!answered) {
+        disableOptions();
+        showFeedback(null, null, q);
+        showToast("⏰ Time's up! Moving to next question...", 'error');
+      }
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const el = document.getElementById('q-timer');
+  el.textContent = timeLeft + 's';
+  el.className = 'quiz-timer' + (timeLeft <= 5 ? ' danger' : '');
+}
+
+function submitAnswer(letter, qId, q) {
+  if (answered) return;
+  answered = true;
+  clearInterval(timerInterval);
+  disableOptions();
+  fetch('/api/quiz_answer', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({quiz_id:QUIZ_ID, question_id:qId, answer:letter})
+  }).then(r=>r.json()).then(d=>{
+    const btn = document.getElementById(`opt-${letter}`);
+    if (d.correct) {
+      btn.classList.add('correct');
+      showFeedback(true, letter, q, d);
+    } else {
+      btn.classList.add('wrong');
+      const cBtn = document.getElementById(`opt-${d.correct_answer}`);
+      if (cBtn) cBtn.classList.add('correct-hl');
+      showFeedback(false, letter, q, d);
+    }
+  });
+}
+
+function disableOptions() {
+  ['A','B','C','D'].forEach(l => {
+    const btn = document.getElementById(`opt-${l}`);
+    if (btn) btn.disabled = true;
+  });
+}
+
+function showFeedback(correct, selected, q, data) {
+  const fb = document.getElementById('feedback');
+  fb.style.display = 'block';
+  if (correct === null) {
+    fb.style.background = '#fef9c3'; fb.style.border = '1.5px solid #ca8a04';
+    fb.innerHTML = `⏰ <strong>Time's up!</strong> Correct: <strong>${q.answer}: ${q.options[q.answer]}</strong>`;
+  } else if (correct) {
+    fb.style.background = '#dcfce7'; fb.style.border = '1.5px solid #16a34a';
+    fb.innerHTML = `✅ <strong>Correct! +1 point</strong><br>${data?.explanation||''}`;
+  } else {
+    fb.style.background = '#fee2e2'; fb.style.border = '1.5px solid #dc2626';
+    fb.innerHTML = `❌ <strong>Wrong!</strong> Answer: <strong>${data?.correct_answer}: ${q.options[data?.correct_answer]}</strong><br>${data?.explanation||''}`;
+  }
+}
+
+function updateScoreboard(scores) {
+  const sb = document.getElementById('scoreboard');
+  const sorted = Object.entries(scores||{}).sort((a,b)=>b[1]-a[1]);
+  const total = QUESTIONS.length;
+  sb.innerHTML = sorted.map(([uid,sc],i)=>`
+    <div class="participant-row">
+      <div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#8B1A2C);display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:12px">${['🥇','🥈','🥉'][i]||i+1}</div>
+      <div style="flex:1;font-size:13px;font-weight:700">${uid===MY_UID?'<strong>You</strong>':uid.substring(0,8)}</div>
+      <div class="participant-score">${sc}/${total}</div>
+    </div>
+  `).join('');
+}
+
+function showFinished(scores) {
+  document.getElementById('waiting-screen').style.display = 'none';
+  document.getElementById('question-screen').style.display = 'none';
+  document.getElementById('finished-screen').style.display = 'block';
+  updateScoreboard(scores);
+  const myScore = scores[MY_UID] || 0;
+  const rank = Object.entries(scores).sort((a,b)=>b[1]-a[1]).findIndex(([uid])=>uid===MY_UID)+1;
+  document.getElementById('final-scores').innerHTML = `<div class="card" style="text-align:center"><div style="font-size:32px;font-weight:900;color:var(--accent)">${myScore}/${QUESTIONS.length}</div><div style="font-size:13px;color:var(--muted)">Your Score • Rank #${rank}</div></div>`;
+}
+
+// Start polling
+pollInterval = setInterval(pollState, 2000);
+pollState();
+</script>
+</body>
+</html>
